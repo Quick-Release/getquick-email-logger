@@ -1,12 +1,13 @@
 <?php
+/*
+ * Plugin Name: getquick-email-logger
+ * Description: Persists email delivery logs in a dedicated table and exposes sent logs via WPGraphQL.
+ * Version: 0.1.0
+ * Author: getquick
+ * License: GPL2+
+ */
 
 declare(strict_types=1);
-
-/*
-Plugin Name: getquick-email-logger
-Description: Persists email delivery logs in a dedicated table and exposes sent logs via WPGraphQL.
-Version: 1.2.0
-*/
 
 if (! defined('ABSPATH')) {
     exit;
@@ -16,7 +17,7 @@ if (! defined('ABSPATH')) {
 if (defined('GETQUICK_EMAIL_LOGGER_VERSION')) {
     return;
 }
-define('GETQUICK_EMAIL_LOGGER_VERSION', '1.2.0');
+define('GETQUICK_EMAIL_LOGGER_VERSION', '0.1.0');
 
 // Load Composer autoloader
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
