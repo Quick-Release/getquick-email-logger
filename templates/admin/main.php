@@ -44,10 +44,37 @@ if (! defined('ABSPATH')) {
     <?php endif; ?>
 
     <div class="getquick-email-logger-content" style="margin-top: 20px;">
+        <?php if ($currentTab === 'settings') : ?>
+            <ul class="subsubsub">
+                <?php
+                $i = 0;
+                $count = count($settingsSubTabs);
+                foreach ($settingsSubTabs as $tabId => $label) :
+                    $i++;
+                    $url = add_query_arg([
+                        'page' => 'getquick-email-logger',
+                        'tab' => 'settings',
+                        'subtab' => $tabId,
+                    ], admin_url('options-general.php'));
+                    $currentClass = ($subTab === $tabId) ? 'current' : '';
+                    ?>
+                    <li>
+                        <a href="<?php echo esc_url($url); ?>" class="<?php echo esc_attr($currentClass); ?>"><?php echo esc_html($label); ?></a>
+                        <?php if ($i < $count) echo ' | '; ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+            <br class="clear">
+        <?php endif; ?>
+
         <?php
         switch ($currentTab) {
             case 'settings':
-                \GetQuick\EmailLogger\Utils\View::render('admin/tabs/settings');
+                if ($subTab === 'spam-domains') {
+                    \GetQuick\EmailLogger\Utils\View::render('admin/tabs/spam-domains');
+                } else {
+                    \GetQuick\EmailLogger\Utils\View::render('admin/tabs/settings');
+                }
                 break;
             case 'test-email':
                 \GetQuick\EmailLogger\Utils\View::render('admin/tabs/test-email');

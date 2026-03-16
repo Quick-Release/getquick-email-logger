@@ -51,6 +51,15 @@ class AdminManager
             ]
         );
 
+        register_setting(
+            'getquick_email_logger_blocked_domains',
+            'getquick_email_logger_blocked_domains',
+            [
+                'sanitize_callback' => [$this, 'sanitizeBlockedDomains'],
+                'default' => '',
+            ]
+        );
+
         add_settings_section(
             'getquick_email_logger_discord_main',
             'Discord Logging Settings',
@@ -81,6 +90,29 @@ class AdminManager
                 array_merge(['id' => $id], $args)
             );
         }
+    }
+
+    public function sanitizeBlockedDomains(mixed $input): string
+    {
+        if (! is_string($input)) {
+            return '';
+        }
+
+        $lines = explode("\n", str_replace("\r\n", "\n", $input));
+        $domains = [];
+
+        foreach ($lines as $line) {
+            $domain = strtolower(trim($line));
+            if ($domain === '') {
+                continue;
+            }
+            // Basic domain validation
+            if (preg_match('/^[a-z0-9.-]+\.[a-z]{2,}$/', $domain)) {
+                $domains[] = $domain;
+            }
+        }
+
+        return implode("\n", array_unique($domains));
     }
 
     public function renderSettingField(array $args): void
@@ -130,6 +162,14 @@ class AdminManager
             $currentTab = 'logs';
         }
 
+        $subTab = '';
+        if ($currentTab === 'settings') {
+            $subTab = isset($_GET['subtab']) ? sanitize_key((string) $_GET['subtab']) : 'general';
+            if (! in_array($subTab, ['general', 'spam-domains'], true)) {
+                $subTab = 'general';
+            }
+        }
+
         $tabArgs = [];
         if ($currentTab === 'logs') {
             $currentPage = isset($_GET['paged']) ? max(1, absint($_GET['paged'])) : 1;
@@ -144,10 +184,15 @@ class AdminManager
         View::render('admin/main', [
             'title' => 'GetQuick Email Logger',
             'currentTab' => $currentTab,
+            'subTab' => $subTab,
             'tabs' => [
                 'logs' => 'Logs',
                 'test-email' => 'Test email',
                 'settings' => 'Settings',
+            ],
+            'settingsSubTabs' => [
+                'general' => 'General',
+                'spam-domains' => 'Block known spam domains',
             ],
             'notices' => [
                 'resent' => ['updated notice', 'Email resent successfully.'],
