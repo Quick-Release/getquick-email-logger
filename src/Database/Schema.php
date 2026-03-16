@@ -15,22 +15,32 @@ class Schema
 
     public function maybeInstall(): void
     {
-        $currentVersion = (string) get_option(GETQUICK_EMAIL_LOGGER_SCHEMA_VERSION, '');
-        if ($currentVersion === GETQUICK_EMAIL_LOGGER_SCHEMA_VERSION) {
+        $schemaOption = defined('GETQUICK_EMAIL_LOGGER_SCHEMA_OPTION')
+            ? (string) constant('GETQUICK_EMAIL_LOGGER_SCHEMA_OPTION')
+            : 'getquick_email_logger_schema_version';
+        $schemaVersion = defined('GETQUICK_EMAIL_LOGGER_SCHEMA_VERSION')
+            ? (string) constant('GETQUICK_EMAIL_LOGGER_SCHEMA_VERSION')
+            : '1.2.0';
+        $schemaLockKey = defined('GETQUICK_EMAIL_LOGGER_SCHEMA_LOCK_KEY')
+            ? (string) constant('GETQUICK_EMAIL_LOGGER_SCHEMA_LOCK_KEY')
+            : 'getquick_email_logger_schema_lock';
+
+        $currentVersion = (string) get_option($schemaOption, '');
+        if ($currentVersion === $schemaVersion) {
             return;
         }
 
-        if (get_transient(GETQUICK_EMAIL_LOGGER_SCHEMA_LOCK_KEY)) {
+        if (get_transient($schemaLockKey)) {
             return;
         }
 
-        set_transient(GETQUICK_EMAIL_LOGGER_SCHEMA_LOCK_KEY, '1', MINUTE_IN_SECONDS);
+        set_transient($schemaLockKey, '1', MINUTE_IN_SECONDS);
 
         try {
             $this->install();
-            update_option(GETQUICK_EMAIL_LOGGER_SCHEMA_OPTION, GETQUICK_EMAIL_LOGGER_SCHEMA_VERSION, false);
+            update_option($schemaOption, $schemaVersion, false);
         } finally {
-            delete_transient(GETQUICK_EMAIL_LOGGER_SCHEMA_LOCK_KEY);
+            delete_transient($schemaLockKey);
         }
     }
 

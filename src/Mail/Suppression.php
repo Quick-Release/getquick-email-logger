@@ -38,38 +38,43 @@ class Suppression
             return $return;
         }
 
-        $recipients = Normalizer::emailList($atts['to'] ?? []);
+        $headers = Normalizer::headers($atts['headers'] ?? []);
+        $recipients = array_values(array_unique(array_merge(
+            Normalizer::emailList($atts['to'] ?? []),
+            Normalizer::emailList($headers['Cc'] ?? []),
+            Normalizer::emailList($headers['Bcc'] ?? []),
+        )));
+
+        if ($recipients === []) {
+            return null;
+        }
+
         $blockedDomains = $this->getBlockedDomains();
-        
+
         $suppressed = [];
         $reason = 'recipient_suppressed';
 
         foreach ($recipients as $email) {
-            // Check individual suppression
             if ($this->bounceRepository->isSuppressed($email)) {
                 $suppressed[] = $email;
                 continue;
             }
 
-            // Check domain suppression
-            $domain = substr(strrchr($email, "@"), 1);
-            if ($domain !== false && in_array($domain, $blockedDomains, true)) {
+            $domain = strrchr($email, '@');
+            $domain = is_string($domain) ? strtolower(ltrim($domain, '@')) : '';
+            if ($domain !== '' && in_array($domain, $blockedDomains, true)) {
                 $suppressed[] = $email;
                 $reason = 'domain_blocked';
             }
         }
 
         if ($suppressed === []) {
-            return null; // Continue sending
+            return null;
         }
 
-        // If all recipients are suppressed, cancel the mail
-        if (count($suppressed) === count($recipients)) {
-            $this->logSuppression($atts, $suppressed, $reason);
-            return false; // Cancel send
-        }
+        $this->logSuppression($atts, $suppressed, $reason);
 
-        return null;
+        return false;
     }
 
     private function getBlockedDomains(): array
@@ -79,7 +84,10 @@ class Suppression
             return [];
         }
 
-        return array_filter(explode("\n", $raw));
+        return array_values(array_unique(array_filter(array_map(
+            static fn (string $domain): string => strtolower(trim($domain)),
+            explode("\n", $raw),
+        ))));
     }
 
     private function logSuppression(array $atts, array $suppressed, string $reason): void
@@ -100,7 +108,10 @@ class Suppression
             'context' => ['suppressed_emails' => $suppressed],
         ];
 
-        // Trigger the async write event
-        do_action(GETQUICK_EMAIL_LOGGER_ASYNC_ACTION, $event);
+        $asyncAction = defined('GETQUICK_EMAIL_LOGGER_ASYNC_ACTION')
+            ? (string) constant('GETQUICK_EMAIL_LOGGER_ASYNC_ACTION')
+            : 'getquick_email_logger_write_event';
+
+        do_action($asyncAction, $event);
     }
 }

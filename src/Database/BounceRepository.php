@@ -8,11 +8,26 @@ class BounceRepository
 {
     public function getTableName(): string
     {
-        $name = is_string(GETQUICK_EMAIL_LOGGER_TABLE_NAME) ? GETQUICK_EMAIL_LOGGER_TABLE_NAME : 'getquick_email_logs';
+        global $wpdb;
+
+        $configuredName = defined('GETQUICK_EMAIL_LOGGER_TABLE_NAME')
+            ? constant('GETQUICK_EMAIL_LOGGER_TABLE_NAME')
+            : 'getquick_email_logs';
+        $name = is_string($configuredName) ? $configuredName : 'getquick_email_logs';
         $name = preg_replace('/[^a-zA-Z0-9_]/', '', $name);
+
+        if (! is_string($name) || $name === '') {
+            $name = 'getquick_email_logs';
+        }
+
+        $prefix = isset($wpdb->prefix) && is_string($wpdb->prefix) ? $wpdb->prefix : '';
+        if ($prefix !== '' && ! str_starts_with($name, $prefix)) {
+            $name = $prefix . ltrim($name, '_');
+        }
+
         $name = str_replace('_logs', '_bounces', $name);
 
-        return is_string($name) && $name !== '' ? $name : 'getquick_email_bounces';
+        return $name !== '' ? $name : $prefix . 'getquick_email_bounces';
     }
 
     public function add(string $email, string $type = 'hard', string $reason = ''): bool
