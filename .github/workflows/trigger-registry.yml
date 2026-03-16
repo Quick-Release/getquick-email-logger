@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Pinging Registry Repo
         run: |
-          curl -fL -X POST https://api.github.com/repos/Quick-Release/getquick-registry/dispatches \
+          curl -X POST https://api.github.com/repos/quick-release/getquick-registry/dispatches \
           -H "Accept: application/vnd.github.v3+json" \
-          -H "Authorization: Bearer ${{ secrets.REGISTRY_TRIGGER_TOKEN }}" \
+          -H "Authorization: bearer ${{ secrets.REGISTRY_TRIGGER_TOKEN }}" \
           -d '{"event_type": "plugin_updated"}'
