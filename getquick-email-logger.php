@@ -12,6 +12,12 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
+// Prevent double initialization
+if (defined('GETQUICK_EMAIL_LOGGER_VERSION')) {
+    return;
+}
+define('GETQUICK_EMAIL_LOGGER_VERSION', '1.2.0');
+
 // Load Composer autoloader
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';
@@ -22,6 +28,16 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
  */
 function getquick_email_logger_init(): void
 {
+    // Safety check: Ensure the main Plugin class is available (autoloaded)
+    if (! class_exists('\\GetQuick\\EmailLogger\\Plugin')) {
+        add_action('admin_notices', function () {
+            printf(
+                '<div class="notice notice-error"><p><strong>getquick-email-logger:</strong> The autoloader is missing. Please run <code>composer install</code> in the plugin directory or ensure the site-wide autoloader is configured correctly.</p></div>'
+            );
+        });
+        return;
+    }
+
     \GetQuick\EmailLogger\Plugin::getInstance();
 }
 

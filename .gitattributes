@@ -1,0 +1,8 @@
+# Archive exclusions for Composer packages
+.gitignore export-ignore
+.gitattributes export-ignore
+GEMINI.md export-ignore
+email-logs-implementation-todo.md export-ignore
+# Keep composer.json for site-wide detection
+# composer.json export-ignore
+composer.lock export-ignore
