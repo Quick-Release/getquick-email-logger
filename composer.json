@@ -1,0 +1,19 @@
+{
+    "name": "getquick/getquick-email-logger",
+    "description": "Persists email delivery logs in a dedicated table and exposes sent logs via WPGraphQL.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "autoload": {
+        "psr-4": {
+            "GetQuick\\EmailLogger\\": "src/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true
+        }
+    },
+    "require": {
+        "php": ">=8.1"
+    }
+}

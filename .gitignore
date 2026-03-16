@@ -1,0 +1,26 @@
+# Dependencies
+/vendor/
+
+# macOS
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# WordPress / Temp
+wp-cli.local.yml
+.phpunit.result.cache
+
+# Development tools
+.gemini/
+GEMINI.md
+email-logs-implementation-todo.md
