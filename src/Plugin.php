@@ -9,8 +9,10 @@ class Plugin
     private static ?self $instance = null;
 
     private Database\LogRepository $repository;
+    private Database\BounceRepository $bounceRepository;
     private Database\Schema $schema;
     private Mail\Capture $capture;
+    private Mail\Suppression $suppression;
     private Mail\Resender $resender;
     private Integrations\DiscordService $discord;
     private GraphQL\Schema $graphql;
@@ -43,7 +45,7 @@ class Plugin
             'GETQUICK_EMAIL_LOGGER_SENT_WINDOW_DAYS' => 30,
             'GETQUICK_EMAIL_LOGGER_GRAPHQL_ENABLED' => true,
             'GETQUICK_EMAIL_LOGGER_GRAPHQL_MAX_PAGE_SIZE' => 100,
-            'GETQUICK_EMAIL_LOGGER_SCHEMA_VERSION' => '1.1.0',
+            'GETQUICK_EMAIL_LOGGER_SCHEMA_VERSION' => '1.2.0',
             'GETQUICK_EMAIL_LOGGER_SCHEMA_OPTION' => 'getquick_email_logger_schema_version',
             'GETQUICK_EMAIL_LOGGER_SCHEMA_LOCK_KEY' => 'getquick_email_logger_schema_lock',
             'GETQUICK_EMAIL_LOGGER_CLEANUP_HOOK' => 'getquick_email_logger_cleanup_event',
@@ -61,8 +63,10 @@ class Plugin
     private function initComponents(): void
     {
         $this->repository = new Database\LogRepository();
+        $this->bounceRepository = new Database\BounceRepository();
         $this->schema = new Database\Schema($this->repository);
         $this->capture = new Mail\Capture();
+        $this->suppression = new Mail\Suppression($this->bounceRepository);
         $this->resender = new Mail\Resender($this->repository);
         $this->discord = new Integrations\DiscordService();
         $this->graphql = new GraphQL\Schema($this->repository);
@@ -80,6 +84,7 @@ class Plugin
         add_action(GETQUICK_EMAIL_LOGGER_ASYNC_ACTION, [$this, 'processAsyncEvent'], 10, 1);
 
         $this->capture->registerHooks();
+        $this->suppression->registerHooks();
         $this->resender->registerHooks();
         $this->discord->registerHooks();
         $this->graphql->registerHooks();

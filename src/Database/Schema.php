@@ -38,10 +38,12 @@ class Schema
     {
         global $wpdb;
 
-        $table = $this->repository->getTableName();
+        $tableLogs = $this->repository->getTableName();
+        $bounceRepo = new BounceRepository();
+        $tableBounces = $bounceRepo->getTableName();
         $charsetCollate = $wpdb->get_charset_collate();
 
-        $sql = "CREATE TABLE {$table} (
+        $sqlLogs = "CREATE TABLE {$tableLogs} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             created_at_utc DATETIME NOT NULL,
             status VARCHAR(16) NOT NULL,
@@ -68,7 +70,19 @@ class Schema
             KEY idx_client_ref_created_at (client_ref, created_at_utc)
         ) {$charsetCollate};";
 
+        $sqlBounces = "CREATE TABLE {$tableBounces} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            email VARCHAR(191) NOT NULL,
+            bounce_type VARCHAR(16) NOT NULL DEFAULT 'hard',
+            reason TEXT NULL,
+            created_at_utc DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY uk_email (email),
+            KEY idx_created_at (created_at_utc)
+        ) {$charsetCollate};";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        dbDelta($sql);
+        dbDelta($sqlLogs);
+        dbDelta($sqlBounces);
     }
 }

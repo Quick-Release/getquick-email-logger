@@ -43,18 +43,29 @@ class Capture
         unset($args);
 
         $errorMessage = 'Unknown SES error';
+        $errorCode = 'ses_error';
         if (is_object($exception) && method_exists($exception, 'getMessage')) {
             $errorMessage = (string) $exception->getMessage();
+            $errorCode = $exception::class;
         }
 
         $event = $this->buildEvent('failed', $messageArgs, [
             'provider' => 'ses',
-            'error_code' => is_object($exception) ? $exception::class : 'ses_error',
+            'error_code' => $errorCode,
             'error_message' => $errorMessage,
             'context' => ['hook' => 'aws_ses_wp_mail_ses_error_sending_message'],
         ]);
 
         $this->enqueueWrite($event);
+
+        // Auto-suppress if the error indicates a hard bounce or blacklist
+        if (stripos($errorMessage, 'Address is blacklisted') !== false || stripos($errorMessage, 'Hard bounce') !== false) {
+            $bounceRepo = new \GetQuick\EmailLogger\Database\BounceRepository();
+            $recipients = Normalizer::emailList($messageArgs['to'] ?? []);
+            foreach ($recipients as $email) {
+                $bounceRepo->add($email, 'hard', $errorMessage);
+            }
+        }
     }
 
     public function captureNonSesSent(array $mailData): void
