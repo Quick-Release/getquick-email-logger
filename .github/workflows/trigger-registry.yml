@@ -1,0 +1,17 @@
+name: Trigger Registry Update
+
+on:
+  push:
+    tags:
+      - "v*" # Triggers only when you push a tag like v1.0.1
+
+jobs:
+  ping-registry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pinging Registry Repo
+        run: |
+          curl -X POST https://api.github.com/repos/quick-release/getquick-registry/dispatches \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: bearer ${{ secrets.REGISTRY_TRIGGER_TOKEN }}" \
+          -d '{"event_type": "plugin_updated"}'
